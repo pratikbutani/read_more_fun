@@ -48,11 +48,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  String _introText = "Type some introduction text here";
+  String _readMoreText = "This is really funny app.";
 
   bool isReadMoreClicked = false;
 
-  Future<void> _incrementCounter() async {
+  Future<void> _shareApp() async {
     String str = repeatStringNumTimes("\u200B", 1300);
     await Share.share(str + " Hello");
   }
@@ -68,6 +69,81 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // This method is rerun every time setState is called, for instance as done
+    // by the _incrementCounter method above.
+    //
+    // The Flutter framework has been optimized to make rerunning build methods
+    // fast, so that you can just rebuild anything that needs updating rather
+    // than having to individually change instances of widgets.
+    return Scaffold(
+      resizeToAvoidBottomPadding: false,
+      backgroundColor: NeumorphicTheme.baseColor(context),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              SizedBox(height: 20),
+              _getHeaderTextWidget(),
+              SizedBox(height: 30),
+              Neumorphic(
+                style: NeumorphicStyle(
+                    depth: 5,
+                    intensity: 0.4,
+                    border: NeumorphicBorder(
+                        isEnabled: true, color: Colors.white38, width: 0.1)),
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _getTextInputLabelWidget("Enter Intro Text"),
+                    SizedBox(height: 8),
+                    _getTextInputFieldIntroText(),
+                    SizedBox(height: 25),
+                    _getTextInputLabelWidget("Read-more content"),
+                    SizedBox(height: 8),
+                    _getTextInputFieldReadMoreText(),
+                    SizedBox(height: 25),
+                    _getTextInputLabelWidget("Message Preview:"),
+                    SizedBox(height: 8),
+                    _getProperTextChild(),
+                    SizedBox(height: 40),
+                    _getButtonCopyToClipboard()
+                  ],
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: NeumorphicFloatingActionButton(
+        onPressed: _shareApp,
+        tooltip: 'Share App',
+        style: NeumorphicStyle(shape: NeumorphicShape.flat),
+        child: Icon(
+          Icons.share,
+          color: Colors.white,
+        ),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+
+  _getHeaderTextWidget() {
+    return NeumorphicText(
+      "Create WhatsApp Quiz, Spoiler, Joke, Pay-off, or general Intro for longer messages with “Read more” button",
+      textStyle: NeumorphicTextStyle(fontFamily: 'fontFamily', fontSize: 24),
+      textAlign: TextAlign.center,
+      style:
+          NeumorphicStyle(color: Colors.white, shadowLightColor: Colors.white),
+    );
+  }
+
+  _getProperTextChild() {
     double pixelRatio = MediaQuery.of(context).devicePixelRatio;
     double px = 1 / pixelRatio;
 
@@ -80,151 +156,115 @@ class _MyHomePageState extends State<MyHomePage> {
       alignment: Alignment.topLeft,
     );
 
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      backgroundColor: NeumorphicTheme.baseColor(context),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              SizedBox(height: 20),
-              NeumorphicText(
-                "Create WhatsApp Quiz, Spoiler, Joke, Pay-off, or general Intro for longer messages with “Read more” button",
-                textStyle:
-                    NeumorphicTextStyle(fontFamily: 'fontFamily', fontSize: 24),
-                textAlign: TextAlign.center,
-                style: NeumorphicStyle(
-                    color: Colors.white, shadowLightColor: Colors.white),
-              ),
-              SizedBox(height: 30),
-              Neumorphic(
-                style: NeumorphicStyle(
-                    depth: 5,
-                    intensity: 0.4,
-                    border: NeumorphicBorder(
-                        isEnabled: true, color: Colors.white38, width: 0.5)),
-                padding: EdgeInsets.all(20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    NeumorphicText(
-                      "Enter Intro Text",
-                      textStyle: NeumorphicTextStyle(
-                          fontFamily: 'fontFamily', fontSize: 16),
-                      style: NeumorphicStyle(
-                          color: Colors.white, shadowLightColor: Colors.white),
-                    ),
-                    SizedBox(height: 8),
-                    Neumorphic(
-                      style: NeumorphicStyle(depth: -2, intensity: 1),
-                      padding: EdgeInsets.all(20),
-                      child: TextFormField(
-                        style:
-                            TextStyle(fontFamily: 'fontFamily', fontSize: 16),
-                        cursorColor: Colors.white,
-                        cursorWidth: 1,
-                        decoration: InputDecoration.collapsed(
-                          hintText: "Type some introduction text",
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 25),
-                    NeumorphicText(
-                      "Read-more content",
-                      textStyle: NeumorphicTextStyle(
-                          fontFamily: 'fontFamily', fontSize: 16),
-                      style: NeumorphicStyle(
-                          color: Colors.white, shadowLightColor: Colors.white),
-                    ),
-                    SizedBox(height: 8),
-                    Neumorphic(
-                      style: NeumorphicStyle(depth: -2, intensity: 1),
-                      padding: EdgeInsets.all(20),
-                      child: TextFormField(
-                        style:
-                            TextStyle(fontFamily: 'fontFamily', fontSize: 16),
-                        cursorColor: Colors.white,
-                        cursorWidth: 1,
-                        decoration: InputDecoration.collapsed(
-                          hintText: "This is really funny app.",
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 25),
-                    NeumorphicText(
-                      "Message Preview:",
-                      textStyle: NeumorphicTextStyle(
-                          fontFamily: 'fontFamily', fontSize: 16),
-                      style: NeumorphicStyle(
-                          color: Colors.white, shadowLightColor: Colors.white),
-                    ),
-                    Bubble(
-                      style: styleMe,
-                      child: Neumorphic(
-                          style: NeumorphicStyle(depth: -2, intensity: 1),
-                          padding: EdgeInsets.all(20),
-                          child: _getProperTextChild()),
-                    ),
-                  ],
-                ),
-              )
-            ],
-          ),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Share Text',
-        child: Icon(Icons.share),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
-  }
-
-  _getProperTextChild() {
-    TextStyle defaultStyle = TextStyle(color: Colors.grey, fontSize: 16.0);
+    TextStyle defaultStyle = TextStyle(color: Colors.black87, fontSize: 16.0);
     TextStyle linkStyle = TextStyle(
         color: Colors.blue,
         decoration: TextDecoration.underline,
         fontSize: 16.0);
 
     return isReadMoreClicked
-        ? RichText(
-            text: TextSpan(
-                text: 'Intro Text' + repeatStringNumTimes("\u200B", 1300),
-                style: defaultStyle,
-                children: <TextSpan>[
-                TextSpan(
-                    text: '\n\n\n Here is the your message',
-                    style: defaultStyle)
-              ]))
-        : RichText(
-            text: TextSpan(
-                text: 'Intro Text' + repeatStringNumTimes("\u200B", 1300),
-                style: defaultStyle,
-                children: <TextSpan>[
-                TextSpan(text: ' ... ', style: defaultStyle),
-                TextSpan(
-                    text: 'Read more',
-                    style: linkStyle,
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () => {
-                            setState(() {
-                              isReadMoreClicked = !isReadMoreClicked;
+        ? Bubble(
+            style: styleMe,
+            child: RichText(
+                text: TextSpan(
+                    text: _introText + repeatStringNumTimes("\u200B", 1300),
+                    style: defaultStyle,
+                    children: <TextSpan>[
+                  TextSpan(text: '\n\n\n' + _readMoreText, style: defaultStyle)
+                ])))
+        : Bubble(
+            style: styleMe,
+            child: RichText(
+                text: TextSpan(
+                    text: _introText + repeatStringNumTimes("\u200B", 1300),
+                    style: defaultStyle,
+                    children: <TextSpan>[
+                  TextSpan(text: ' ... ', style: defaultStyle),
+                  TextSpan(
+                      text: 'Read more',
+                      style: linkStyle,
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () => {
+                              setState(() {
+                                isReadMoreClicked = !isReadMoreClicked;
+                              })
                             })
-                          })
-              ]));
+                ])));
+  }
+
+  _getTextInputLabelWidget(dynamic title) {
+    return NeumorphicText(
+      title,
+      textStyle: NeumorphicTextStyle(fontFamily: 'fontFamily', fontSize: 16),
+      style:
+          NeumorphicStyle(color: Colors.white, shadowLightColor: Colors.white),
+    );
+  }
+
+  _getTextInputFieldIntroText() {
+    return Neumorphic(
+      style: NeumorphicStyle(depth: -2, intensity: 1),
+      padding: EdgeInsets.all(20),
+      child: TextFormField(
+        style: TextStyle(fontFamily: 'fontFamily', fontSize: 16),
+        cursorColor: Colors.white,
+        cursorWidth: 1,
+        onChanged: (value) {
+          setState(() {
+            isReadMoreClicked = false;
+            if (value.isEmpty)
+              _introText = "Type some introduction text here";
+            else
+              _introText = value;
+          });
+        },
+        decoration: InputDecoration.collapsed(
+          hintText: _introText,
+          border: InputBorder.none,
+        ),
+      ),
+    );
+  }
+
+  _getTextInputFieldReadMoreText() {
+    return Neumorphic(
+      style: NeumorphicStyle(depth: -2, intensity: 1),
+      padding: EdgeInsets.all(20),
+      child: TextFormField(
+        keyboardType: TextInputType.multiline,
+        maxLines: 5,
+        style: TextStyle(fontFamily: 'fontFamily', fontSize: 16),
+        cursorColor: Colors.white,
+        cursorWidth: 1,
+        onChanged: (value) {
+          setState(() {
+            isReadMoreClicked = false;
+            if (value.isEmpty)
+              _readMoreText = "This is really funny app.";
+            else
+              _readMoreText = value;
+          });
+        },
+        decoration: InputDecoration.collapsed(
+          hintText: _readMoreText,
+          border: InputBorder.none,
+        ),
+      ),
+    );
+  }
+
+  _getButtonCopyToClipboard() {
+    return Center(
+      child: NeumorphicButton(
+        style: NeumorphicStyle(
+          shape: NeumorphicShape.flat,
+          boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(4)),
+        ),
+        padding: const EdgeInsets.all(12.0),
+        onPressed: () {},
+        child: Text("Copy to Clipboard",
+            style: TextStyle(fontFamily: 'fontFamily', fontSize: 16)),
+      ),
+    );
   }
 }
