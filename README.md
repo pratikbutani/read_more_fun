@@ -1,6 +1,9 @@
-# read_more_fun
+# Read More Fun
 
-A new app with read more texts.
+Short Your WhatsApp Messages using Read More Button in WhatsApp.
+
+**Useful Dependency:**
+- flutter_neumorphic: ^3.0.3
 
 ## Getting Started
 
