@@ -1,12 +1,15 @@
 buildscript {
-    ext.kotlin_version = '1.3.50'
+    ext.kotlin_version = '1.4.21'
     repositories {
         google()
         jcenter()
+        // Check that you have the following line (if not, add it):
+        google()  // Google's Maven repository
     }
 
     dependencies {
         classpath 'com.android.tools.build:gradle:4.1.1'
+        classpath 'com.google.gms:google-services:4.3.4'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }

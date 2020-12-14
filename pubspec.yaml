@@ -31,6 +31,9 @@ dependencies:
   share: ^0.6.5+4
   flutter_neumorphic: ^3.0.3
   bubble: ^1.1.9+1
+  firebase_database: ^4.4.0
+  firebase_analytics: ^5.0.2
+  auto_size_text: ^2.1.0
 
 dev_dependencies:
   flutter_test:

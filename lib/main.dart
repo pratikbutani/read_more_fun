@@ -1,7 +1,11 @@
 import 'package:bubble/bubble.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
+import 'package:read_more_fun/extensions.dart';
+import 'package:read_more_fun/templates.dart';
 import 'package:share/share.dart';
 
 void main() {
@@ -15,11 +19,13 @@ class MyApp extends StatelessWidget {
     return NeumorphicApp(
       themeMode: ThemeMode.dark,
       theme: NeumorphicThemeData(
-          variantColor: Colors.white,
+          accentColor: Colors.black,
+          variantColor: Colors.black87,
           baseColor: Color(0xFFFFFFFF),
           lightSource: LightSource.topLeft),
       darkTheme: NeumorphicThemeData(
-        variantColor: Colors.white,
+        accentColor: Colors.white,
+        variantColor: Colors.white70,
         baseColor: Color(0xFF3E3E3E),
         lightSource: LightSource.topLeft,
       ),
@@ -53,22 +59,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool isReadMoreClicked = false;
 
-  Future<void> _shareApp() async {
-    String str = repeatStringNumTimes("\u200B", 1300);
-    await Share.share(str + " Hello");
-  }
+  final _scaffoldKey = GlobalKey<ScaffoldState>(); // new line
 
-  repeatStringNumTimes(string, times) {
-    var repeatedString = "";
-    while (times > 0) {
-      repeatedString += string;
-      times--;
-    }
-    return repeatedString;
+  _finalTextForClipBoard() {
+    return _introText + Extension.getLovelyString() + _readMoreText;
   }
 
   @override
   Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -76,58 +76,70 @@ class _MyHomePageState extends State<MyHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
+      key: _scaffoldKey,
       resizeToAvoidBottomPadding: false,
       backgroundColor: NeumorphicTheme.baseColor(context),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              SizedBox(height: 20),
-              _getHeaderTextWidget(),
-              SizedBox(height: 30),
-              Neumorphic(
-                style: NeumorphicStyle(
-                    depth: 5,
-                    intensity: 0.4,
-                    border: NeumorphicBorder(
-                        isEnabled: true, color: Colors.white38, width: 0.1)),
-                padding: EdgeInsets.all(20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _getTextInputLabelWidget("Enter Intro Text"),
-                    SizedBox(height: 8),
-                    _getTextInputFieldIntroText(),
-                    SizedBox(height: 25),
-                    _getTextInputLabelWidget("Read-more content"),
-                    SizedBox(height: 8),
-                    _getTextInputFieldReadMoreText(),
-                    SizedBox(height: 25),
-                    _getTextInputLabelWidget("Message Preview:"),
-                    SizedBox(height: 8),
-                    _getProperTextChild(),
-                    SizedBox(height: 40),
-                    _getButtonCopyToClipboard()
-                  ],
+      body: SingleChildScrollView(
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+                left: 20.0, top: 20.0, right: 20.0, bottom: bottom),
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                SizedBox(height: 20),
+                _getHeaderTextWidget(),
+                SizedBox(height: 30),
+                Neumorphic(
+                  style: NeumorphicStyle(
+                      depth: 5,
+                      intensity: 0.4,
+                      border: NeumorphicBorder(
+                          isEnabled: true,
+                          color: Extension.textColor(context),
+                          width: 0.1)),
+                  padding: EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _getTextInputLabelWidget("Enter Intro Text"),
+                      SizedBox(height: 8),
+                      _getTextInputFieldIntroText(),
+                      SizedBox(height: 25),
+                      _getTextInputLabelWidget("Read-more content"),
+                      SizedBox(height: 8),
+                      _getTextInputFieldReadMoreText(),
+                      SizedBox(height: 25),
+                      _getTextInputLabelWidget("Message Preview:"),
+                      SizedBox(height: 8),
+                      _getProperTextChild(),
+                      SizedBox(height: 40),
+                      _getButtonCopyToClipboard(),
+                      SizedBox(height: 40),
+                      _getButtonForTemplatesActivity()
+                    ],
+                  ),
                 ),
-              )
-            ],
+                SizedBox(height: 30),
+              ],
+            ),
           ),
         ),
       ),
       floatingActionButton: NeumorphicFloatingActionButton(
-        onPressed: _shareApp,
+        onPressed: () {
+          Extension.showSnackBar(_scaffoldKey.currentState, 'Sharing App...');
+          Extension.shareApp();
+        },
         tooltip: 'Share App',
         style: NeumorphicStyle(shape: NeumorphicShape.flat),
         child: Icon(
           Icons.share,
-          color: Colors.white,
+          color: Extension.iconsColor(context),
         ),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
@@ -135,69 +147,22 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _getHeaderTextWidget() {
     return NeumorphicText(
-      "Create WhatsApp Quiz, Spoiler, Joke, Pay-off, or general Intro for longer messages with “Read more” button",
-      textStyle: NeumorphicTextStyle(fontFamily: 'fontFamily', fontSize: 24),
+      "Create WhatsApp Quiz, Spoiler, Joke, Pay-off, or General Intro of Business for longer messages with “... Read more” button",
+      textStyle: NeumorphicTextStyle(fontFamily: 'fontFamily', fontSize: 24.0),
       textAlign: TextAlign.center,
-      style:
-          NeumorphicStyle(color: Colors.white, shadowLightColor: Colors.white),
+      style: NeumorphicStyle(
+          color: Extension.textColor(context),
+          shadowLightColor: Extension.textColor(context)),
     );
-  }
-
-  _getProperTextChild() {
-    double pixelRatio = MediaQuery.of(context).devicePixelRatio;
-    double px = 1 / pixelRatio;
-
-    BubbleStyle styleMe = BubbleStyle(
-      nip: BubbleNip.rightTop,
-      color: Color.fromARGB(255, 225, 255, 199),
-      elevation: 5 * px,
-      radius: Radius.circular(3),
-      margin: BubbleEdges.only(top: 8.0),
-      alignment: Alignment.topLeft,
-    );
-
-    TextStyle defaultStyle = TextStyle(color: Colors.black87, fontSize: 16.0);
-    TextStyle linkStyle = TextStyle(
-        color: Colors.blue,
-        decoration: TextDecoration.underline,
-        fontSize: 16.0);
-
-    return isReadMoreClicked
-        ? Bubble(
-            style: styleMe,
-            child: RichText(
-                text: TextSpan(
-                    text: _introText + repeatStringNumTimes("\u200B", 1300),
-                    style: defaultStyle,
-                    children: <TextSpan>[
-                  TextSpan(text: '\n\n\n' + _readMoreText, style: defaultStyle)
-                ])))
-        : Bubble(
-            style: styleMe,
-            child: RichText(
-                text: TextSpan(
-                    text: _introText + repeatStringNumTimes("\u200B", 1300),
-                    style: defaultStyle,
-                    children: <TextSpan>[
-                  TextSpan(text: ' ... ', style: defaultStyle),
-                  TextSpan(
-                      text: 'Read more',
-                      style: linkStyle,
-                      recognizer: TapGestureRecognizer()
-                        ..onTap = () => {
-                              setState(() {
-                                isReadMoreClicked = !isReadMoreClicked;
-                              })
-                            })
-                ])));
   }
 
   _getTextInputLabelWidget(dynamic title) {
     return NeumorphicText(
       title,
       textStyle: NeumorphicTextStyle(fontFamily: 'fontFamily', fontSize: 16),
-      style:
-          NeumorphicStyle(color: Colors.white, shadowLightColor: Colors.white),
+      style: NeumorphicStyle(
+          color: Extension.textColor(context),
+          shadowLightColor: Extension.textColor(context)),
     );
   }
 
@@ -206,8 +171,10 @@ class _MyHomePageState extends State<MyHomePage> {
       style: NeumorphicStyle(depth: -2, intensity: 1),
       padding: EdgeInsets.all(20),
       child: TextFormField(
+        enableInteractiveSelection: true,
+        textCapitalization: TextCapitalization.sentences,
         style: TextStyle(fontFamily: 'fontFamily', fontSize: 16),
-        cursorColor: Colors.white,
+        cursorColor: Extension.textColor(context),
         cursorWidth: 1,
         onChanged: (value) {
           setState(() {
@@ -231,10 +198,11 @@ class _MyHomePageState extends State<MyHomePage> {
       style: NeumorphicStyle(depth: -2, intensity: 1),
       padding: EdgeInsets.all(20),
       child: TextFormField(
+        textCapitalization: TextCapitalization.sentences,
         keyboardType: TextInputType.multiline,
         maxLines: 5,
         style: TextStyle(fontFamily: 'fontFamily', fontSize: 16),
-        cursorColor: Colors.white,
+        cursorColor: Extension.textColor(context),
         cursorWidth: 1,
         onChanged: (value) {
           setState(() {
@@ -253,7 +221,118 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  _getProperTextChild() {
+    double pixelRatio = MediaQuery.of(context).devicePixelRatio;
+    double px = 1 / pixelRatio;
+
+    BubbleStyle styleMe = BubbleStyle(
+      nip: BubbleNip.rightTop,
+      color: Colors.white,
+      elevation: 5 * px,
+      radius: Radius.circular(3),
+      margin: BubbleEdges.only(top: 8.0),
+      alignment: Alignment.topLeft,
+    );
+
+    List<Shadow> shadow = [
+      Shadow(
+        offset: Offset(1.5, 1.5),
+        blurRadius: 1.5,
+        color: Colors.black45,
+      ),
+      Shadow(
+        offset: Offset(1.5, 1.5),
+        blurRadius: 1.5,
+        color: Colors.white54,
+      ),
+    ];
+
+    TextStyle defaultStyle =
+        TextStyle(color: Colors.black87, fontSize: 16.0, shadows: shadow);
+    TextStyle linkStyle = TextStyle(
+        color: Colors.blue,
+        decoration: TextDecoration.underline,
+        fontSize: 16.0,
+        shadows: shadow);
+
+    return isReadMoreClicked
+        ? Bubble(
+            style: styleMe,
+            child: RichText(
+                text: TextSpan(
+                    text: _introText + Extension.getLovelyString(),
+                    style: defaultStyle,
+                    children: <TextSpan>[
+                  TextSpan(text: '\n\n\n' + _readMoreText, style: defaultStyle)
+                ])))
+        : Bubble(
+            style: styleMe,
+            child: RichText(
+                text: TextSpan(
+                    text: _introText + Extension.getLovelyString(),
+                    style: defaultStyle,
+                    children: <TextSpan>[
+                  TextSpan(text: ' ... ', style: defaultStyle),
+                  TextSpan(
+                      text: 'Read more',
+                      style: linkStyle,
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () => {
+                              setState(() {
+                                isReadMoreClicked = !isReadMoreClicked;
+                              })
+                            })
+                ])));
+  }
+
   _getButtonCopyToClipboard() {
+    return Center(
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              NeumorphicButton(
+                style: NeumorphicStyle(
+                  shape: NeumorphicShape.flat,
+                  boxShape:
+                      NeumorphicBoxShape.roundRect(BorderRadius.circular(4)),
+                ),
+                padding: const EdgeInsets.all(12.0),
+                onPressed: () {
+                  Clipboard.setData(
+                          new ClipboardData(text: _finalTextForClipBoard()))
+                      .then((value) => {
+                            Extension.showSnackBar(_scaffoldKey.currentState,
+                                'Copied to Clipboard')
+                          });
+                },
+                child: Text("Copy to Clipboard",
+                    style: TextStyle(fontFamily: 'fontFamily', fontSize: 16)),
+              ),
+              NeumorphicButton(
+                style: NeumorphicStyle(
+                  shape: NeumorphicShape.flat,
+                  boxShape:
+                      NeumorphicBoxShape.roundRect(BorderRadius.circular(4)),
+                ),
+                padding: const EdgeInsets.all(12.0),
+                onPressed: () {
+                  Extension.showSnackBar(
+                      _scaffoldKey.currentState, 'Please wait...');
+                  Share.share(_finalTextForClipBoard());
+                },
+                child: Text("Send on WhatsApp",
+                    style: TextStyle(fontFamily: 'fontFamily', fontSize: 16)),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  _getButtonForTemplatesActivity() {
     return Center(
       child: NeumorphicButton(
         style: NeumorphicStyle(
@@ -261,10 +340,32 @@ class _MyHomePageState extends State<MyHomePage> {
           boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(4)),
         ),
         padding: const EdgeInsets.all(12.0),
-        onPressed: () {},
-        child: Text("Copy to Clipboard",
+        onPressed: () {
+          Navigator.of(context).push(_createRoute());
+        },
+        child: Text("Check Templates",
             style: TextStyle(fontFamily: 'fontFamily', fontSize: 16)),
       ),
+    );
+  }
+
+  Route _createRoute() {
+    return PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          MyTemplatesPage(),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        var begin = Offset(0.0, 1.0);
+        var end = Offset.zero;
+        var curve = Curves.ease;
+
+        var tween =
+            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+        return SlideTransition(
+          position: animation.drive(tween),
+          child: child,
+        );
+      },
     );
   }
 }
