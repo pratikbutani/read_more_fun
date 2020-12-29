@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bubble/bubble.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
@@ -59,6 +61,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool isReadMoreClicked = false;
 
+  StreamController<String> introTextStreamController =
+      StreamController<String>.broadcast();
+
+  StreamController<bool> introBoolStreamController =
+      StreamController<bool>.broadcast();
+
+  StreamController<bool> readmoreBoolStreamController =
+      StreamController<bool>.broadcast();
+  StreamController<String> readmoreTextStreamController =
+      StreamController<String>.broadcast();
   final _scaffoldKey = GlobalKey<ScaffoldState>(); // new line
 
   _finalTextForClipBoard() {
@@ -69,18 +81,12 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
 
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       key: _scaffoldKey,
       resizeToAvoidBottomPadding: false,
       backgroundColor: NeumorphicTheme.baseColor(context),
-      body: SingleChildScrollView(
-        child: SafeArea(
+      body: SafeArea(
+        child: SingleChildScrollView(
           child: Padding(
             padding: EdgeInsets.only(
                 left: 20.0, top: 20.0, right: 20.0, bottom: bottom),
@@ -167,58 +173,70 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _getTextInputFieldIntroText() {
-    return Neumorphic(
-      style: NeumorphicStyle(depth: -2, intensity: 1),
-      padding: EdgeInsets.all(20),
-      child: TextFormField(
-        enableInteractiveSelection: true,
-        textCapitalization: TextCapitalization.sentences,
-        style: TextStyle(fontFamily: 'fontFamily', fontSize: 16),
-        cursorColor: Extension.textColor(context),
-        cursorWidth: 1,
-        onChanged: (value) {
-          setState(() {
-            isReadMoreClicked = false;
-            if (value.isEmpty)
-              _introText = "Type some introduction text here";
-            else
-              _introText = value;
-          });
-        },
-        decoration: InputDecoration.collapsed(
-          hintText: _introText,
-          border: InputBorder.none,
-        ),
-      ),
-    );
+    return StreamBuilder<String>(
+        initialData: _introText,
+        stream: introTextStreamController.stream,
+        builder: (context, snapshot) {
+          return Neumorphic(
+            style: NeumorphicStyle(depth: -2, intensity: 1),
+            padding: EdgeInsets.all(20),
+            child: TextFormField(
+              enableInteractiveSelection: true,
+              textCapitalization: TextCapitalization.sentences,
+              style: TextStyle(fontFamily: 'fontFamily', fontSize: 16),
+              cursorColor: Extension.textColor(context),
+              cursorWidth: 1,
+              onChanged: (value) {
+                isReadMoreClicked = false;
+                if (value.isEmpty) {
+                  _introText = "Type some introduction text here";
+                } else {
+                  _introText = value;
+                }
+                readmoreBoolStreamController.add(isReadMoreClicked);
+                introTextStreamController.add(_introText);
+              },
+              decoration: InputDecoration.collapsed(
+                hintText: _introText,
+                border: InputBorder.none,
+              ),
+            ),
+          );
+        });
   }
 
   _getTextInputFieldReadMoreText() {
-    return Neumorphic(
-      style: NeumorphicStyle(depth: -2, intensity: 1),
-      padding: EdgeInsets.all(20),
-      child: TextFormField(
-        textCapitalization: TextCapitalization.sentences,
-        keyboardType: TextInputType.multiline,
-        maxLines: 5,
-        style: TextStyle(fontFamily: 'fontFamily', fontSize: 16),
-        cursorColor: Extension.textColor(context),
-        cursorWidth: 1,
-        onChanged: (value) {
-          setState(() {
-            isReadMoreClicked = false;
-            if (value.isEmpty)
-              _readMoreText = "This is really funny app.";
-            else
-              _readMoreText = value;
-          });
-        },
-        decoration: InputDecoration.collapsed(
-          hintText: _readMoreText,
-          border: InputBorder.none,
-        ),
-      ),
-    );
+    return StreamBuilder<String>(
+        initialData: _readMoreText,
+        stream: readmoreTextStreamController.stream,
+        builder: (context, snapshot) {
+          return Neumorphic(
+            style: NeumorphicStyle(depth: -2, intensity: 1),
+            padding: EdgeInsets.all(20),
+            child: TextFormField(
+              textCapitalization: TextCapitalization.sentences,
+              keyboardType: TextInputType.multiline,
+              maxLines: 5,
+              style: TextStyle(fontFamily: 'fontFamily', fontSize: 16),
+              cursorColor: Extension.textColor(context),
+              cursorWidth: 1,
+              onChanged: (value) {
+                isReadMoreClicked = false;
+                if (value.isEmpty) {
+                  _readMoreText = "This is really funny app.";
+                } else {
+                  _readMoreText = value;
+                }
+                readmoreTextStreamController.add(_readMoreText);
+                readmoreBoolStreamController.add(isReadMoreClicked);
+              },
+              decoration: InputDecoration.collapsed(
+                hintText: _readMoreText,
+                border: InputBorder.none,
+              ),
+            ),
+          );
+        });
   }
 
   _getProperTextChild() {
@@ -255,34 +273,40 @@ class _MyHomePageState extends State<MyHomePage> {
         fontSize: 16.0,
         shadows: shadow);
 
-    return isReadMoreClicked
-        ? Bubble(
-            style: styleMe,
-            child: RichText(
-                text: TextSpan(
-                    text: _introText + Extension.getLovelyString(),
-                    style: defaultStyle,
-                    children: <TextSpan>[
-                  TextSpan(text: '\n\n\n' + _readMoreText, style: defaultStyle)
-                ])))
-        : Bubble(
-            style: styleMe,
-            child: RichText(
-                text: TextSpan(
-                    text: _introText + Extension.getLovelyString(),
-                    style: defaultStyle,
-                    children: <TextSpan>[
-                  TextSpan(text: ' ... ', style: defaultStyle),
-                  TextSpan(
-                      text: 'Read more',
-                      style: linkStyle,
-                      recognizer: TapGestureRecognizer()
-                        ..onTap = () => {
-                              setState(() {
-                                isReadMoreClicked = !isReadMoreClicked;
-                              })
-                            })
-                ])));
+    return StreamBuilder<bool>(
+        initialData: isReadMoreClicked,
+        stream: readmoreBoolStreamController.stream,
+        builder: (ctx, snapshot) {
+          return isReadMoreClicked
+              ? Bubble(
+                  style: styleMe,
+                  child: RichText(
+                      text: TextSpan(
+                          text: _introText + Extension.getLovelyString(),
+                          style: defaultStyle,
+                          children: <TextSpan>[
+                        TextSpan(
+                            text: '\n\n\n' + _readMoreText, style: defaultStyle)
+                      ])))
+              : Bubble(
+                  style: styleMe,
+                  child: RichText(
+                      text: TextSpan(
+                          text: _introText + Extension.getLovelyString(),
+                          style: defaultStyle,
+                          children: <TextSpan>[
+                        TextSpan(text: ' ... ', style: defaultStyle),
+                        TextSpan(
+                            text: 'Read more',
+                            style: linkStyle,
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => {
+                                    isReadMoreClicked = !isReadMoreClicked,
+                                    readmoreBoolStreamController
+                                        .add(isReadMoreClicked)
+                                  })
+                      ])));
+        });
   }
 
   _getButtonCopyToClipboard() {
@@ -360,12 +384,20 @@ class _MyHomePageState extends State<MyHomePage> {
 
         var tween =
             Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-
         return SlideTransition(
           position: animation.drive(tween),
           child: child,
         );
       },
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    introTextStreamController.close();
+    introBoolStreamController.close();
+    readmoreBoolStreamController.close();
+    readmoreTextStreamController.close();
   }
 }
