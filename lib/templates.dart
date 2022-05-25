@@ -150,7 +150,7 @@ class _MyTemplatesPageState extends State<MyTemplatesPage> {
                 child: Icon(Icons.share),
                 onPressed: () {
                   Extension.showSnackBar(
-                      _scaffoldKey.currentState, 'Sharing App...');
+                      _scaffoldKey.currentState!, 'Sharing App...');
                   Extension.shareApp();
                 },
                 tooltip: 'Share App',
@@ -166,7 +166,7 @@ class _MyTemplatesPageState extends State<MyTemplatesPage> {
                   color: Extension.textColor(context),
                   shadowLightColor: Extension.textColor(context)),
             )),
-        resizeToAvoidBottomPadding: false,
+        resizeToAvoidBottomInset: false,
         backgroundColor: NeumorphicTheme.baseColor(context),
         body: SafeArea(
             child: ListView.builder(
@@ -179,7 +179,8 @@ class _MyTemplatesPageState extends State<MyTemplatesPage> {
                           intensity: 0.5,
                           depth: 3,
                           surfaceIntensity: 0.5,
-                          border: NeumorphicBorder(color: Colors.white38 ,width: 0.1)),
+                          border: NeumorphicBorder(
+                              color: Colors.white38, width: 0.1)),
                       margin: EdgeInsets.all(10),
                       child: ListTile(
                         trailing: NeumorphicButton(
@@ -192,7 +193,7 @@ class _MyTemplatesPageState extends State<MyTemplatesPage> {
                             color: Extension.iconsColor(context),
                           ),
                           onPressed: () {
-                            Extension.showSnackBar(_scaffoldKey.currentState,
+                            Extension.showSnackBar(_scaffoldKey.currentState!,
                                 'Sharing Template...');
                             Extension.shareTemplate(listOfTemplates[index]);
                           },
@@ -203,7 +204,7 @@ class _MyTemplatesPageState extends State<MyTemplatesPage> {
                             textStyle: NeumorphicTextStyle(
                                 fontFamily: 'fontFamily', fontSize: 18),
                             style: NeumorphicStyle(
-                              intensity: 0.5,
+                                intensity: 0.5,
                                 color: Extension.textColor(context),
                                 shadowLightColor:
                                     Extension.textColor(context))),

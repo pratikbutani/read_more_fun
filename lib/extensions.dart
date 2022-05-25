@@ -36,10 +36,10 @@ class Extension {
         "\n\nHow's it? \n\nMake your own long text to short: https://bit.ly/read-more-whatsapp");
   }
 
-  static Color iconsColor(BuildContext context) {
-    final theme = NeumorphicTheme.of(context);
+  static Color? iconsColor(BuildContext context) {
+    final theme = NeumorphicTheme.of(context)!;
     if (theme.isUsingDark) {
-      return theme.current.accentColor;
+      return theme.current!.accentColor;
     } else {
       return null;
     }

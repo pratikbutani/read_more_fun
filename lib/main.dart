@@ -1,9 +1,7 @@
 import 'dart:async';
 
 import 'package:bubble/bubble.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:read_more_fun/extensions.dart';
@@ -38,7 +36,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key? key, this.title}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -49,7 +47,7 @@ class MyHomePage extends StatefulWidget {
   // used by the build method of the State. Fields in a Widget subclass are
   // always marked "final".
 
-  final String title;
+  final String? title;
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -83,7 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return Scaffold(
       key: _scaffoldKey,
-      resizeToAvoidBottomPadding: false,
+      resizeToAvoidBottomInset: false,
       backgroundColor: NeumorphicTheme.baseColor(context),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -138,7 +136,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: NeumorphicFloatingActionButton(
         onPressed: () {
-          Extension.showSnackBar(_scaffoldKey.currentState, 'Sharing App...');
+          Extension.showSnackBar(_scaffoldKey.currentState!, 'Sharing App...');
           Extension.shareApp();
         },
         tooltip: 'Share App',
@@ -327,7 +325,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   Clipboard.setData(
                           new ClipboardData(text: _finalTextForClipBoard()))
                       .then((value) => {
-                            Extension.showSnackBar(_scaffoldKey.currentState,
+                            Extension.showSnackBar(_scaffoldKey.currentState!,
                                 'Copied to Clipboard')
                           });
                 },
@@ -343,7 +341,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 padding: const EdgeInsets.all(12.0),
                 onPressed: () {
                   Extension.showSnackBar(
-                      _scaffoldKey.currentState, 'Please wait...');
+                      _scaffoldKey.currentState!, 'Please wait...');
                   Share.share(_finalTextForClipBoard());
                 },
                 child: Text("Send on WhatsApp",
