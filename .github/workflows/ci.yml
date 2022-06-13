@@ -30,13 +30,12 @@ jobs:
          ls
          var=$(ls)
          echo "Dir $var"
-        
-        # cat /home/runner/work/read_more_fun/read_more_fun/app/google-services.json | base64
+         cat /home/runner/work/read_more_fun/read_more_fun/android/app/google-services.json | base64
 
       - name: Putting data
         env:
           DATA: ${{ secrets.GOOGLE_SERVICES_JSON }}
-        run: echo $DATA > /home/runner/work/read_more_fun/read_more_fun/app/google-services.json
+        run: echo $DATA > /home/runner/work/read_more_fun/read_more_fun/app/android/google-services.json
 
 
 
