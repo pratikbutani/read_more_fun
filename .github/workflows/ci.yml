@@ -26,7 +26,6 @@ jobs:
          ls
          var=$(ls)
          echo "Dir $var"
-         cd /home/runner/work/read_more_fun/read_more_fun/app
          ls
          var=$(ls)
          echo "Dir $var"
