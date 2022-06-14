@@ -33,7 +33,7 @@ jobs:
 
       - name: Putting data
         env:
-          DATA: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          DATA: ${{ secrets.GOOGLE_SERVICE_JSON }}
         run: echo $DATA > /home/runner/work/read_more_fun/read_more_fun/android/app/google-services.json
 
       # Setup the flutter environment.
