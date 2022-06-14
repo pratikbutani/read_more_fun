@@ -29,12 +29,12 @@ jobs:
          ls
          var=$(ls)
          echo "Dir $var"
-         cat /Users/runner/work/read_more_fun/read_more_fun/android/app/google-services.json | base64
+         cat /home/runner/work/read_more_fun/read_more_fun/android/app/google-services.json | base64
 
       - name: Putting data
         env:
           DATA: ${{ secrets.GOOGLE_SERVICE_JSON }}
-        run: echo $DATA > /Users/runner/work/read_more_fun/read_more_fun/android/app/google-services.json
+        run: echo $DATA > /home/runner/work/read_more_fun/read_more_fun/android/app/google-services.json
 
       # Setup the flutter environment.
       - uses: subosito/flutter-action@v2
