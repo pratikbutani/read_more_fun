@@ -151,8 +151,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _getHeaderTextWidget() {
     return NeumorphicText(
-      "Create WhatsApp Quiz, Spoiler, Joke, Pay-off, or General Intro of Business for longer messages with “... Read more” button",
-      textStyle: NeumorphicTextStyle(fontFamily: 'fontFamily', fontSize: 24.0),
+      "Create WhatsApp Quiz, Spoiler, Joke, Pay-off, or General Intro of Business for longer messages with \n “... Read more” button",
+      textStyle: NeumorphicTextStyle(fontFamily: 'fontFamily', fontSize: 20.0),
       textAlign: TextAlign.center,
       style: NeumorphicStyle(
           color: Extension.textColor(context),
@@ -314,37 +314,46 @@ class _MyHomePageState extends State<MyHomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              NeumorphicButton(
-                style: NeumorphicStyle(
-                  shape: NeumorphicShape.flat,
-                  boxShape:
-                      NeumorphicBoxShape.roundRect(BorderRadius.circular(4)),
+              Expanded(
+                child: NeumorphicButton(
+                  style: NeumorphicStyle(
+                    shape: NeumorphicShape.convex,
+                    boxShape:
+                        NeumorphicBoxShape.roundRect(BorderRadius.circular(4)),
+                  ),
+                  padding: const EdgeInsets.all(12.0),
+                  onPressed: () {
+                    Clipboard.setData(
+                            new ClipboardData(text: _finalTextForClipBoard()))
+                        .then((value) => {
+                              Extension.showSnackBar(
+                                  context, 'Copied to Clipboard')
+                            });
+                  },
+                  child: Text("Copy to Clipboard",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontFamily: 'fontFamily', fontSize: 16)),
                 ),
-                padding: const EdgeInsets.all(12.0),
-                onPressed: () {
-                  Clipboard.setData(
-                          new ClipboardData(text: _finalTextForClipBoard()))
-                      .then((value) => {
-                            Extension.showSnackBar(
-                                context, 'Copied to Clipboard')
-                          });
-                },
-                child: Text("Copy to Clipboard",
-                    style: TextStyle(fontFamily: 'fontFamily', fontSize: 16)),
               ),
-              NeumorphicButton(
-                style: NeumorphicStyle(
-                  shape: NeumorphicShape.flat,
-                  boxShape:
-                      NeumorphicBoxShape.roundRect(BorderRadius.circular(4)),
+              SizedBox(
+                width: 10,
+              ),
+              Expanded(
+                child: NeumorphicButton(
+                  style: NeumorphicStyle(
+                    shape: NeumorphicShape.concave,
+                    boxShape:
+                        NeumorphicBoxShape.roundRect(BorderRadius.circular(4)),
+                  ),
+                  padding: const EdgeInsets.all(12.0),
+                  onPressed: () {
+                    Extension.showSnackBar(context, 'Please wait...');
+                    Share.share(_finalTextForClipBoard());
+                  },
+                  child: Text("Send on WhatsApp",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontFamily: 'fontFamily', fontSize: 16)),
                 ),
-                padding: const EdgeInsets.all(12.0),
-                onPressed: () {
-                  Extension.showSnackBar(context, 'Please wait...');
-                  Share.share(_finalTextForClipBoard());
-                },
-                child: Text("Send on WhatsApp",
-                    style: TextStyle(fontFamily: 'fontFamily', fontSize: 16)),
               ),
             ],
           ),
