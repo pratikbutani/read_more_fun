@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 
 import 'extensions.dart';
@@ -149,8 +148,7 @@ class _MyTemplatesPageState extends State<MyTemplatesPage> {
               NeumorphicButton(
                 child: Icon(Icons.share),
                 onPressed: () {
-                  Extension.showSnackBar(
-                      _scaffoldKey.currentState!, 'Sharing App...');
+                  Extension.showSnackBar(context, 'Sharing App...');
                   Extension.shareApp();
                 },
                 tooltip: 'Share App',
@@ -193,8 +191,8 @@ class _MyTemplatesPageState extends State<MyTemplatesPage> {
                             color: Extension.iconsColor(context),
                           ),
                           onPressed: () {
-                            Extension.showSnackBar(_scaffoldKey.currentState!,
-                                'Sharing Template...');
+                            Extension.showSnackBar(
+                                context, 'Sharing Template...');
                             Extension.shareTemplate(listOfTemplates[index]);
                           },
                           tooltip: 'Share App',

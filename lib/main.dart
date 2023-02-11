@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:read_more_fun/extensions.dart';
 import 'package:read_more_fun/templates.dart';
-import 'package:share/share.dart';
+import 'package:share_plus/share_plus.dart';
 
 void main() {
   runApp(MyApp());
@@ -136,7 +136,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: NeumorphicFloatingActionButton(
         onPressed: () {
-          Extension.showSnackBar(_scaffoldKey.currentState!, 'Sharing App...');
+          Extension.showSnackBar(context, 'Sharing App...');
           Extension.shareApp();
         },
         tooltip: 'Share App',
@@ -325,8 +325,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   Clipboard.setData(
                           new ClipboardData(text: _finalTextForClipBoard()))
                       .then((value) => {
-                            Extension.showSnackBar(_scaffoldKey.currentState!,
-                                'Copied to Clipboard')
+                            Extension.showSnackBar(
+                                context, 'Copied to Clipboard')
                           });
                 },
                 child: Text("Copy to Clipboard",
@@ -340,8 +340,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 padding: const EdgeInsets.all(12.0),
                 onPressed: () {
-                  Extension.showSnackBar(
-                      _scaffoldKey.currentState!, 'Please wait...');
+                  Extension.showSnackBar(context, 'Please wait...');
                   Share.share(_finalTextForClipBoard());
                 },
                 child: Text("Send on WhatsApp",

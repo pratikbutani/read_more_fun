@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_neumorphic/flutter_neumorphic.dart';
-import 'package:share/share.dart';
+import 'package:share_plus/share_plus.dart';
 
 class Extension {
   static getLovelyString() {
@@ -15,8 +14,8 @@ class Extension {
     return repeatedString + "\n\n";
   }
 
-  static showSnackBar(ScaffoldState scaffoldState, String message) {
-    scaffoldState.showSnackBar(SnackBar(
+  static showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         duration: Duration(seconds: 1),
         content: Text(message,
             style: TextStyle(fontFamily: 'fontFamily', fontSize: 16))));
