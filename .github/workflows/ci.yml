@@ -65,9 +65,9 @@ jobs:
 
       - name: Build the APK
         run: flutter build appbundle --release
-
+          
       - name: Run Fastlane
-        uses: maierj/fastlane-action@v3.0.0
+        uses: maierj/fastlane-action@v1.4.0
         with:
           lane: beta
           subdirectory: android
