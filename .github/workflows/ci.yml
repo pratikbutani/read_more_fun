@@ -66,6 +66,11 @@ jobs:
       - name: Build the APK
         run: flutter build appbundle --release
           
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+    
       - name: Run Fastlane
         uses: maierj/fastlane-action@v1.4.0
         with:
