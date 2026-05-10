@@ -1,14 +1,17 @@
-import 'dart:async';
-
 import 'package:bubble/bubble.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_neumorphic/flutter_neumorphic.dart';
+import 'package:flutter_neumorphic_plus/flutter_neumorphic.dart';
+import 'package:read_more_fun/draft_service.dart';
 import 'package:read_more_fun/extensions.dart';
+import 'package:read_more_fun/history_page.dart';
 import 'package:read_more_fun/templates.dart';
-import 'package:share/share.dart';
+import 'package:read_more_fun/theme_service.dart';
+import 'package:share_plus/share_plus.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await ThemeService.instance.init();
   runApp(MyApp());
 }
 
@@ -16,22 +19,30 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return NeumorphicApp(
-      themeMode: ThemeMode.dark,
-      theme: NeumorphicThemeData(
-          accentColor: Colors.black,
-          variantColor: Colors.black87,
-          baseColor: Color(0xFFFFFFFF),
-          lightSource: LightSource.topLeft),
-      darkTheme: NeumorphicThemeData(
-        accentColor: Colors.white,
-        variantColor: Colors.white70,
-        baseColor: Color(0xFF3E3E3E),
-        lightSource: LightSource.topLeft,
-      ),
-      debugShowCheckedModeBanner: false,
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
-    );
+    return ValueListenableBuilder<ThemeMode>(
+        valueListenable: ThemeService.instance.themeModeNotifier,
+        builder: (context, themeMode, child) {
+          return NeumorphicApp(
+            themeMode: themeMode,
+            theme: NeumorphicThemeData(
+                accentColor: Colors.black,
+                variantColor: Colors.black87,
+                baseColor: Color(0xFFFFFFFF),
+                depth: 3,
+                intensity: 0.35,
+                lightSource: LightSource.topLeft),
+            darkTheme: NeumorphicThemeData(
+              accentColor: Colors.white,
+              variantColor: Colors.white70,
+              baseColor: Color(0xFF3E3E3E),
+              depth: 3,
+              intensity: 0.35,
+              lightSource: LightSource.topLeft,
+            ),
+            debugShowCheckedModeBanner: false,
+            home: MyHomePage(title: 'Flutter Demo Home Page'),
+          );
+        });
   }
 }
 
@@ -54,25 +65,37 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String _introText = "Type some introduction text here";
-  String _readMoreText = "This is really funny app.";
+  final ValueNotifier<String> _introTextNotifier =
+      ValueNotifier<String>("Type some introduction text here");
+  final ValueNotifier<String> _readMoreTextNotifier =
+      ValueNotifier<String>("This is really funny app.");
+  final ValueNotifier<bool> _isReadMoreClickedNotifier =
+      ValueNotifier<bool>(false);
 
-  bool isReadMoreClicked = false;
+  late TextEditingController _introController;
+  late TextEditingController _readMoreController;
 
-  StreamController<String> introTextStreamController =
-      StreamController<String>.broadcast();
-
-  StreamController<bool> introBoolStreamController =
-      StreamController<bool>.broadcast();
-
-  StreamController<bool> readmoreBoolStreamController =
-      StreamController<bool>.broadcast();
-  StreamController<String> readmoreTextStreamController =
-      StreamController<String>.broadcast();
-  final _scaffoldKey = GlobalKey<ScaffoldState>(); // new line
+  @override
+  void initState() {
+    super.initState();
+    _introController = TextEditingController();
+    _readMoreController = TextEditingController();
+  }
 
   _finalTextForClipBoard() {
-    return _introText + Extension.getLovelyString() + _readMoreText;
+    return _introTextNotifier.value +
+        Extension.getLovelyString() +
+        _readMoreTextNotifier.value;
+  }
+
+  @override
+  void dispose() {
+    _introTextNotifier.dispose();
+    _readMoreTextNotifier.dispose();
+    _isReadMoreClickedNotifier.dispose();
+    _introController.dispose();
+    _readMoreController.dispose();
+    super.dispose();
   }
 
   @override
@@ -80,7 +103,6 @@ class _MyHomePageState extends State<MyHomePage> {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
 
     return Scaffold(
-      key: _scaffoldKey,
       resizeToAvoidBottomInset: false,
       backgroundColor: NeumorphicTheme.baseColor(context),
       body: SafeArea(
@@ -98,8 +120,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 SizedBox(height: 30),
                 Neumorphic(
                   style: NeumorphicStyle(
-                      depth: 5,
-                      intensity: 0.4,
+                      depth: 2,
+                      intensity: 0.3,
                       border: NeumorphicBorder(
                           isEnabled: true,
                           color: Extension.textColor(context),
@@ -110,11 +132,11 @@ class _MyHomePageState extends State<MyHomePage> {
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _getTextInputLabelWidget("Enter Intro Text"),
+                      _getTextInputLabelWidget("Enter Intro Text\n(*bold*, _italic_, ~strike~)"),
                       SizedBox(height: 8),
                       _getTextInputFieldIntroText(),
                       SizedBox(height: 25),
-                      _getTextInputLabelWidget("Read-more content"),
+                      _getTextInputLabelWidget("Read-more content\n(*bold*, _italic_, ~strike~)"),
                       SizedBox(height: 8),
                       _getTextInputFieldReadMoreText(),
                       SizedBox(height: 25),
@@ -122,9 +144,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       SizedBox(height: 8),
                       _getProperTextChild(),
                       SizedBox(height: 40),
-                      _getButtonCopyToClipboard(),
-                      SizedBox(height: 40),
-                      _getButtonForTemplatesActivity()
+                      _getActionButtonsGrid(),
                     ],
                   ),
                 ),
@@ -136,7 +156,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: NeumorphicFloatingActionButton(
         onPressed: () {
-          Extension.showSnackBar(_scaffoldKey.currentState!, 'Sharing App...');
+          Extension.showSnackBar(context, 'Sharing App...');
           Extension.shareApp();
         },
         tooltip: 'Share App',
@@ -150,20 +170,45 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _getHeaderTextWidget() {
-    return NeumorphicText(
-      "Create WhatsApp Quiz, Spoiler, Joke, Pay-off, or General Intro of Business for longer messages with “... Read more” button",
-      textStyle: NeumorphicTextStyle(fontFamily: 'fontFamily', fontSize: 24.0),
-      textAlign: TextAlign.center,
-      style: NeumorphicStyle(
-          color: Extension.textColor(context),
-          shadowLightColor: Extension.textColor(context)),
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            NeumorphicButton(
+              onPressed: () {
+                ThemeService.instance.toggleTheme();
+              },
+              style: NeumorphicStyle(
+                shape: NeumorphicShape.flat,
+                boxShape: NeumorphicBoxShape.circle(),
+              ),
+              child: Icon(
+                ThemeService.instance.isDarkMode
+                    ? Icons.light_mode
+                    : Icons.dark_mode,
+                color: Extension.textColor(context),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 10),
+        NeumorphicText(
+          "Create WhatsApp Quiz, Spoiler, Joke, Pay-off, or General Intro of Business for longer messages with “... Read more” button",
+          textStyle: NeumorphicTextStyle(fontFamily: 'fontFamily', fontSize: 16.0),
+          textAlign: TextAlign.center,
+          style: NeumorphicStyle(
+              color: Extension.textColor(context),
+              shadowLightColor: Extension.textColor(context)),
+        ),
+      ],
     );
   }
 
   _getTextInputLabelWidget(dynamic title) {
     return NeumorphicText(
       title,
-      textStyle: NeumorphicTextStyle(fontFamily: 'fontFamily', fontSize: 16),
+      textStyle: NeumorphicTextStyle(fontFamily: 'fontFamily', fontSize: 14),
       style: NeumorphicStyle(
           color: Extension.textColor(context),
           shadowLightColor: Extension.textColor(context)),
@@ -171,31 +216,29 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _getTextInputFieldIntroText() {
-    return StreamBuilder<String>(
-        initialData: _introText,
-        stream: introTextStreamController.stream,
-        builder: (context, snapshot) {
+    return ValueListenableBuilder<String>(
+        valueListenable: _introTextNotifier,
+        builder: (context, introText, snapshot) {
           return Neumorphic(
-            style: NeumorphicStyle(depth: -2, intensity: 1),
+            style: NeumorphicStyle(depth: -1, intensity: 0.6),
             padding: EdgeInsets.all(20),
             child: TextFormField(
+              controller: _introController,
               enableInteractiveSelection: true,
               textCapitalization: TextCapitalization.sentences,
-              style: TextStyle(fontFamily: 'fontFamily', fontSize: 16),
+              style: TextStyle(fontFamily: 'fontFamily', fontSize: 14),
               cursorColor: Extension.textColor(context),
               cursorWidth: 1,
               onChanged: (value) {
-                isReadMoreClicked = false;
+                _isReadMoreClickedNotifier.value = false;
                 if (value.isEmpty) {
-                  _introText = "Type some introduction text here";
+                  _introTextNotifier.value = "Type introduction text here";
                 } else {
-                  _introText = value;
+                  _introTextNotifier.value = value;
                 }
-                readmoreBoolStreamController.add(isReadMoreClicked);
-                introTextStreamController.add(_introText);
               },
               decoration: InputDecoration.collapsed(
-                hintText: _introText,
+                hintText: "Type introduction text here",
                 border: InputBorder.none,
               ),
             ),
@@ -204,32 +247,30 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _getTextInputFieldReadMoreText() {
-    return StreamBuilder<String>(
-        initialData: _readMoreText,
-        stream: readmoreTextStreamController.stream,
-        builder: (context, snapshot) {
+    return ValueListenableBuilder<String>(
+        valueListenable: _readMoreTextNotifier,
+        builder: (context, readMoreText, snapshot) {
           return Neumorphic(
-            style: NeumorphicStyle(depth: -2, intensity: 1),
+            style: NeumorphicStyle(depth: -1, intensity: 0.6),
             padding: EdgeInsets.all(20),
             child: TextFormField(
+              controller: _readMoreController,
               textCapitalization: TextCapitalization.sentences,
               keyboardType: TextInputType.multiline,
               maxLines: 5,
-              style: TextStyle(fontFamily: 'fontFamily', fontSize: 16),
+              style: TextStyle(fontFamily: 'fontFamily', fontSize: 14),
               cursorColor: Extension.textColor(context),
               cursorWidth: 1,
               onChanged: (value) {
-                isReadMoreClicked = false;
+                _isReadMoreClickedNotifier.value = false;
                 if (value.isEmpty) {
-                  _readMoreText = "This is really funny app.";
+                  _readMoreTextNotifier.value = "This is really funny app.";
                 } else {
-                  _readMoreText = value;
+                  _readMoreTextNotifier.value = value;
                 }
-                readmoreTextStreamController.add(_readMoreText);
-                readmoreBoolStreamController.add(isReadMoreClicked);
               },
               decoration: InputDecoration.collapsed(
-                hintText: _readMoreText,
+                hintText: "This is really funny app.",
                 border: InputBorder.none,
               ),
             ),
@@ -243,131 +284,171 @@ class _MyHomePageState extends State<MyHomePage> {
 
     BubbleStyle styleMe = BubbleStyle(
       nip: BubbleNip.rightTop,
-      color: Colors.white,
-      elevation: 5 * px,
-      radius: Radius.circular(3),
+      color: NeumorphicTheme.isUsingDark(context)
+          ? Color(0xFF1E2428)
+          : Colors.white,
+      elevation: 8 * px,
+      radius: Radius.circular(8),
       margin: BubbleEdges.only(top: 8.0),
       alignment: Alignment.topLeft,
     );
 
-    List<Shadow> shadow = [
-      Shadow(
-        offset: Offset(1.5, 1.5),
-        blurRadius: 1.5,
-        color: Colors.black45,
-      ),
-      Shadow(
-        offset: Offset(1.5, 1.5),
-        blurRadius: 1.5,
-        color: Colors.white54,
-      ),
-    ];
-
-    TextStyle defaultStyle =
-        TextStyle(color: Colors.black87, fontSize: 16.0, shadows: shadow);
+    TextStyle defaultStyle = TextStyle(
+        color: Extension.textColor(context).withOpacity(0.8), fontSize: 14.0);
     TextStyle linkStyle = TextStyle(
         color: Colors.blue,
         decoration: TextDecoration.underline,
-        fontSize: 16.0,
-        shadows: shadow);
+        fontSize: 14.0);
 
-    return StreamBuilder<bool>(
-        initialData: isReadMoreClicked,
-        stream: readmoreBoolStreamController.stream,
-        builder: (ctx, snapshot) {
-          return isReadMoreClicked
-              ? Bubble(
-                  style: styleMe,
-                  child: RichText(
-                      text: TextSpan(
-                          text: _introText + Extension.getLovelyString(),
-                          style: defaultStyle,
-                          children: <TextSpan>[
-                        TextSpan(
-                            text: '\n\n\n' + _readMoreText, style: defaultStyle)
-                      ])))
-              : Bubble(
-                  style: styleMe,
-                  child: RichText(
-                      text: TextSpan(
-                          text: _introText + Extension.getLovelyString(),
-                          style: defaultStyle,
-                          children: <TextSpan>[
-                        TextSpan(text: ' ... ', style: defaultStyle),
-                        TextSpan(
-                            text: 'Read more',
-                            style: linkStyle,
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () => {
-                                    isReadMoreClicked = !isReadMoreClicked,
-                                    readmoreBoolStreamController
-                                        .add(isReadMoreClicked)
-                                  })
-                      ])));
+    return ListenableBuilder(
+        listenable: Listenable.merge([
+          _isReadMoreClickedNotifier,
+          _introTextNotifier,
+          _readMoreTextNotifier
+        ]),
+        builder: (ctx, child) {
+          bool isReadMoreClicked = _isReadMoreClickedNotifier.value;
+          String introText = _introTextNotifier.value;
+          String readMoreText = _readMoreTextNotifier.value;
+
+          return Bubble(
+            style: styleMe,
+            child: isReadMoreClicked
+                ? RichText(
+                    text: TextSpan(
+                        style: defaultStyle,
+                        children: [
+                      ...Extension.parseWhatsAppText(introText, defaultStyle),
+                      TextSpan(
+                          text: Extension.getLovelyString(),
+                          style: defaultStyle),
+                      ...Extension.parseWhatsAppText(
+                          '\n\n\n' + readMoreText, defaultStyle),
+                    ]))
+                : RichText(
+                    text: TextSpan(
+                        style: defaultStyle,
+                        children: [
+                      ...Extension.parseWhatsAppText(introText, defaultStyle),
+                      TextSpan(
+                          text: Extension.getLovelyString(),
+                          style: defaultStyle),
+                      TextSpan(text: ' ... ', style: defaultStyle),
+                      TextSpan(
+                          text: 'Read more',
+                          style: linkStyle,
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              _isReadMoreClickedNotifier.value =
+                                  !_isReadMoreClickedNotifier.value;
+                            })
+                    ])),
+          );
         });
   }
 
-  _getButtonCopyToClipboard() {
-    return Center(
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              NeumorphicButton(
+  _getActionButtonsGrid() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: NeumorphicButton(
                 style: NeumorphicStyle(
-                  shape: NeumorphicShape.flat,
+                  shape: NeumorphicShape.concave,
                   boxShape:
                       NeumorphicBoxShape.roundRect(BorderRadius.circular(4)),
                 ),
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
                 onPressed: () {
+                  DraftService.saveDraft(
+                      _introTextNotifier.value, _readMoreTextNotifier.value);
                   Clipboard.setData(
                           new ClipboardData(text: _finalTextForClipBoard()))
                       .then((value) => {
-                            Extension.showSnackBar(_scaffoldKey.currentState!,
-                                'Copied to Clipboard')
+                            Extension.showSnackBar(
+                                context, 'Copied to Clipboard')
                           });
                 },
-                child: Text("Copy to Clipboard",
-                    style: TextStyle(fontFamily: 'fontFamily', fontSize: 16)),
+                child: Center(
+                  child: Text("Copy",
+                      style: TextStyle(fontFamily: 'fontFamily', fontSize: 16)),
+                ),
               ),
-              NeumorphicButton(
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: NeumorphicButton(
                 style: NeumorphicStyle(
-                  shape: NeumorphicShape.flat,
+                  shape: NeumorphicShape.concave,
                   boxShape:
                       NeumorphicBoxShape.roundRect(BorderRadius.circular(4)),
                 ),
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
                 onPressed: () {
-                  Extension.showSnackBar(
-                      _scaffoldKey.currentState!, 'Please wait...');
+                  DraftService.saveDraft(
+                      _introTextNotifier.value, _readMoreTextNotifier.value);
+                  Extension.showSnackBar(context, 'Please wait...');
                   Share.share(_finalTextForClipBoard());
                 },
-                child: Text("Send on WhatsApp",
-                    style: TextStyle(fontFamily: 'fontFamily', fontSize: 16)),
+                child: Center(
+                  child: Text("WhatsApp",
+                      style: TextStyle(fontFamily: 'fontFamily', fontSize: 16)),
+                ),
               ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  _getButtonForTemplatesActivity() {
-    return Center(
-      child: NeumorphicButton(
-        style: NeumorphicStyle(
-          shape: NeumorphicShape.flat,
-          boxShape: NeumorphicBoxShape.roundRect(BorderRadius.circular(4)),
+            ),
+          ],
         ),
-        padding: const EdgeInsets.all(12.0),
-        onPressed: () {
-          Navigator.of(context).push(_createRoute());
-        },
-        child: Text("Check Templates",
-            style: TextStyle(fontFamily: 'fontFamily', fontSize: 16)),
-      ),
+        SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: NeumorphicButton(
+                style: NeumorphicStyle(
+                  shape: NeumorphicShape.concave,
+                  boxShape:
+                      NeumorphicBoxShape.roundRect(BorderRadius.circular(4)),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+                onPressed: () {
+                  Navigator.of(context).push(_createRoute());
+                },
+                child: Center(
+                  child: Text("Templates",
+                      style: TextStyle(fontFamily: 'fontFamily', fontSize: 16)),
+                ),
+              ),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: NeumorphicButton(
+                style: NeumorphicStyle(
+                  shape: NeumorphicShape.concave,
+                  boxShape:
+                      NeumorphicBoxShape.roundRect(BorderRadius.circular(4)),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+                onPressed: () async {
+                  final Draft? selectedDraft = await Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => HistoryPage()),
+                  );
+                  if (selectedDraft != null) {
+                    _introController.text = selectedDraft.intro;
+                    _readMoreController.text = selectedDraft.readMore;
+                    _introTextNotifier.value = selectedDraft.intro;
+                    _readMoreTextNotifier.value = selectedDraft.readMore;
+                    _isReadMoreClickedNotifier.value = false;
+                  }
+                },
+                child: Center(
+                  child: Text("History",
+                      style: TextStyle(fontFamily: 'fontFamily', fontSize: 16)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -390,12 +471,4 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-    introTextStreamController.close();
-    introBoolStreamController.close();
-    readmoreBoolStreamController.close();
-    readmoreTextStreamController.close();
-  }
 }

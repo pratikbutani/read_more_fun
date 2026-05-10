@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_neumorphic/flutter_neumorphic.dart';
+import 'package:flutter_neumorphic_plus/flutter_neumorphic.dart';
 
 import 'extensions.dart';
 
@@ -9,7 +8,6 @@ class MyTemplatesPage extends StatefulWidget {
 }
 
 class _MyTemplatesPageState extends State<MyTemplatesPage> {
-  final _scaffoldKey = GlobalKey<ScaffoldState>(); // new line
 
   List<String> listOfTemplates = [
     'Accept yourself',
@@ -143,14 +141,13 @@ class _MyTemplatesPageState extends State<MyTemplatesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        key: _scaffoldKey,
         appBar: NeumorphicAppBar(
             actions: [
               NeumorphicButton(
                 child: Icon(Icons.share),
                 onPressed: () {
                   Extension.showSnackBar(
-                      _scaffoldKey.currentState!, 'Sharing App...');
+                      context, 'Sharing App...');
                   Extension.shareApp();
                 },
                 tooltip: 'Share App',
@@ -176,24 +173,24 @@ class _MyTemplatesPageState extends State<MyTemplatesPage> {
                   return Neumorphic(
                       padding: EdgeInsets.all(5),
                       style: NeumorphicStyle(
-                          intensity: 0.5,
-                          depth: 3,
-                          surfaceIntensity: 0.5,
+                          intensity: 0.3,
+                          depth: 1.5,
+                          surfaceIntensity: 0.2,
                           border: NeumorphicBorder(
                               color: Colors.white38, width: 0.1)),
                       margin: EdgeInsets.all(10),
                       child: ListTile(
                         trailing: NeumorphicButton(
                           style: NeumorphicStyle(
-                              intensity: 0.5,
-                              depth: 2,
+                              intensity: 0.3,
+                              depth: 1,
                               shape: NeumorphicShape.concave),
                           child: Icon(
                             Icons.share,
                             color: Extension.iconsColor(context),
                           ),
                           onPressed: () {
-                            Extension.showSnackBar(_scaffoldKey.currentState!,
+                            Extension.showSnackBar(context,
                                 'Sharing Template...');
                             Extension.shareTemplate(listOfTemplates[index]);
                           },

@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_neumorphic/flutter_neumorphic.dart';
-import 'package:share/share.dart';
+import 'package:flutter_neumorphic_plus/flutter_neumorphic.dart';
+import 'package:share_plus/share_plus.dart';
 
 class Extension {
   static getLovelyString() {
@@ -15,8 +14,9 @@ class Extension {
     return repeatedString + "\n\n";
   }
 
-  static showSnackBar(ScaffoldState scaffoldState, String message) {
-    scaffoldState.showSnackBar(SnackBar(
+  static showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         duration: Duration(seconds: 1),
         content: Text(message,
             style: TextStyle(fontFamily: 'fontFamily', fontSize: 16))));
@@ -34,6 +34,40 @@ class Extension {
     await Share.share("*Try out the magic of WhatsApp*" +
         str +
         "\n\nHow's it? \n\nMake your own long text to short: https://bit.ly/read-more-whatsapp");
+  }
+
+  static List<TextSpan> parseWhatsAppText(String text, TextStyle baseStyle) {
+    final RegExp regExp = RegExp(r'([*_~])(.*?)\1');
+    List<TextSpan> spans = [];
+    int lastIndex = 0;
+
+    for (final Match match in regExp.allMatches(text)) {
+      if (match.start > lastIndex) {
+        spans.add(TextSpan(
+            text: text.substring(lastIndex, match.start), style: baseStyle));
+      }
+
+      String marker = match.group(1)!;
+      String content = match.group(2)!;
+      TextStyle style = baseStyle;
+
+      if (marker == '*') {
+        style = style.copyWith(fontWeight: FontWeight.bold);
+      } else if (marker == '_') {
+        style = style.copyWith(fontStyle: FontStyle.italic);
+      } else if (marker == '~') {
+        style = style.copyWith(decoration: TextDecoration.lineThrough);
+      }
+
+      spans.add(TextSpan(text: content, style: style));
+      lastIndex = match.end;
+    }
+
+    if (lastIndex < text.length) {
+      spans.add(TextSpan(text: text.substring(lastIndex), style: baseStyle));
+    }
+
+    return spans;
   }
 
   static Color? iconsColor(BuildContext context) {
