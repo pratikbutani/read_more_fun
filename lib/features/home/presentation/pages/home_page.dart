@@ -7,6 +7,8 @@ import 'package:read_more_fun/core/localization/app_localizations.dart';
 import 'package:read_more_fun/core/services/draft_service.dart';
 import 'package:read_more_fun/core/services/language_service.dart';
 import 'package:read_more_fun/core/services/theme_service.dart';
+import 'package:read_more_fun/core/services/spacing_service.dart';
+import 'package:read_more_fun/features/settings/presentation/pages/settings_page.dart';
 import 'package:read_more_fun/core/utils/whatsapp_formatter.dart';
 import 'package:read_more_fun/features/history/presentation/history_page.dart';
 import 'package:read_more_fun/features/templates/presentation/templates_page.dart';
@@ -33,8 +35,6 @@ class _MyHomePageState extends State<MyHomePage> {
       ValueNotifier<bool>(false);
 
   PresetMode _selectedMode = PresetMode.freeText;
-  double _spacingTimes = WhatsAppFormatter.defaultSpacingTimes.toDouble();
-  bool _showSettings = false;
 
   late TextEditingController _introController;
   late TextEditingController _readMoreController;
@@ -60,21 +60,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool _isInitialized = false;
   String _lastLang = 'en';
-  String _currentLanguage = 'en';
-
-  final Map<String, String> _languages = {
-    'en': 'English 🇬🇧',
-    'hi': 'Hindi (हिन्दी) 🇮🇳',
-    'gu': 'Gujarati (ગુજરાતી) 🇮🇳',
-    'es': 'Spanish (Español) 🇪🇸',
-    'pt': 'Portuguese (Português) 🇵🇹',
-    'zh': 'Chinese (中文) 🇨🇳',
-    'fr': 'French (Français) 🇫🇷',
-    'ar': 'Arabic (العربية) 🇸🇦',
-    'bn': 'Bengali (বাংলা) 🇧🇩',
-    'ru': 'Russian (Русский) 🇷🇺',
-    'ur': 'Urdu (اردو) 🇵🇰',
-  };
 
   @override
   void initState() {
@@ -101,52 +86,6 @@ class _MyHomePageState extends State<MyHomePage> {
     _quizAFocusNode = FocusNode();
 
     _setupFocusListeners();
-    _checkFirstTimeLanguage();
-  }
-
-  Future<void> _checkFirstTimeLanguage() async {
-    final lang = await LanguageService.getLanguage();
-    setState(() {
-      _currentLanguage = lang;
-    });
-  }
-
-  void _showLanguageSelectionDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(
-            context.translate("change_language_title"),
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 320,
-            child: ListView(
-              shrinkWrap: true,
-              children: _languages.entries.map((entry) {
-                return ListTile(
-                  title: Text(entry.value),
-                  trailing: _currentLanguage == entry.key
-                      ? Icon(Icons.check,
-                          color: Theme.of(context).colorScheme.primary)
-                      : null,
-                  onTap: () async {
-                    await LanguageService.setLanguage(entry.key);
-                    setState(() {
-                      _currentLanguage = entry.key;
-                    });
-                    if (context.mounted) Navigator.pop(context);
-                  },
-                );
-              }).toList(),
-            ),
-          ),
-        );
-      },
-    );
   }
 
   @override
@@ -154,7 +93,6 @@ class _MyHomePageState extends State<MyHomePage> {
     super.didChangeDependencies();
     final currentLang = LanguageService.activeLanguageNotifier.value;
     if (!_isInitialized) {
-      _currentLanguage = currentLang;
       _introController.text = context.translate('free_text_intro_hint');
       _readMoreController.text = context.translate('free_text_read_more_hint');
       _introTextNotifier.value = context.translate('free_text_intro_hint');
@@ -174,7 +112,6 @@ class _MyHomePageState extends State<MyHomePage> {
         _readMoreTextNotifier.value = context.translate('free_text_read_more_hint');
       }
       _syncPresetToNotifier();
-      _currentLanguage = currentLang;
       _lastLang = currentLang;
     }
   }
@@ -303,7 +240,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   String _finalTextForClipBoard() {
     return _introTextNotifier.value +
-        WhatsAppFormatter.getLovelyString(times: _spacingTimes.toInt()) +
+        WhatsAppFormatter.getLovelyString(times: SpacingService.spacingNotifier.value) +
         _readMoreTextNotifier.value;
   }
 
@@ -321,31 +258,16 @@ class _MyHomePageState extends State<MyHomePage> {
             color: context.textColor,
           ),
         ),
-        leading: IconButton(
-          icon: Icon(Icons.settings_outlined, color: context.textColor),
-          tooltip: context.translate("advanced_settings"),
-          onPressed: () {
-            setState(() {
-              _showSettings = !_showSettings;
-            });
-          },
-        ),
         actions: [
           IconButton(
-            icon: Icon(Icons.translate_outlined, color: context.textColor),
-            tooltip: context.translate("change_language_title"),
-            onPressed: () => _showLanguageSelectionDialog(),
-          ),
-          IconButton(
+            icon: Icon(Icons.settings_outlined, color: context.textColor),
+            tooltip: context.translate("settings_title"),
             onPressed: () {
-              ThemeService.instance.toggleTheme();
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
             },
-            icon: Icon(
-              ThemeService.instance.isDarkMode
-                  ? Icons.light_mode_outlined
-                  : Icons.dark_mode_outlined,
-              color: context.textColor,
-            ),
           ),
         ],
       ),
@@ -358,8 +280,6 @@ class _MyHomePageState extends State<MyHomePage> {
             children: [
               _getHeaderSubtitleWidget(),
               const SizedBox(height: 16),
-              _buildAdvancedSettingsPanel(theme),
-              const SizedBox(height: 12),
               _buildPresetSelector(),
               const SizedBox(height: 16),
               Card(
@@ -397,7 +317,7 @@ class _MyHomePageState extends State<MyHomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           context.showSnackBar(context.translate('snackbar_sharing'));
-          WhatsAppFormatter.shareApp(context, spacingTimes: _spacingTimes.toInt());
+          WhatsAppFormatter.shareApp(context, spacingTimes: SpacingService.spacingNotifier.value);
         },
         tooltip: context.translate('share_app'),
         child: const Icon(Icons.share_outlined),
@@ -416,60 +336,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _buildAdvancedSettingsPanel(ThemeData theme) {
-    if (!_showSettings) return const SizedBox.shrink();
 
-    return Card(
-      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.tune_outlined,
-                    color: theme.colorScheme.primary, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  context.translate("advanced_settings"),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: context.textColor,
-                    fontSize: 15,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              context.translate("spacing_count", [_spacingTimes.toInt().toString()]),
-              style: TextStyle(color: context.textColor, fontSize: 13),
-            ),
-            Slider(
-              min: 500,
-              max: 2000,
-              value: _spacingTimes,
-              onChanged: (val) {
-                setState(() {
-                  _spacingTimes = val;
-                });
-              },
-            ),
-            Text(
-              context.translate("spacing_note"),
-              style: TextStyle(
-                color: context.textColor.withValues(alpha: 0.5),
-                fontSize: 11,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildPresetSelector() {
     return Center(
@@ -768,7 +635,8 @@ class _MyHomePageState extends State<MyHomePage> {
         listenable: Listenable.merge([
           _isReadMoreClickedNotifier,
           _introTextNotifier,
-          _readMoreTextNotifier
+          _readMoreTextNotifier,
+          SpacingService.spacingNotifier,
         ]),
         builder: (ctx, child) {
           bool isReadMoreClicked = _isReadMoreClickedNotifier.value;
@@ -784,7 +652,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         introText, defaultStyle),
                     TextSpan(
                         text: WhatsAppFormatter.getLovelyString(
-                            times: _spacingTimes.toInt()),
+                            times: SpacingService.spacingNotifier.value),
                         style: defaultStyle),
                     ...WhatsAppFormatter.parseWhatsAppText(
                         '\n\n\n$readMoreText', defaultStyle),
@@ -795,7 +663,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         introText, defaultStyle),
                     TextSpan(
                         text: WhatsAppFormatter.getLovelyString(
-                            times: _spacingTimes.toInt()),
+                            times: SpacingService.spacingNotifier.value),
                         style: defaultStyle),
                     TextSpan(text: ' ... ', style: defaultStyle),
                     TextSpan(

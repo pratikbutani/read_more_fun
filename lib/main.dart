@@ -4,10 +4,13 @@ import 'package:read_more_fun/core/services/theme_service.dart';
 import 'package:read_more_fun/core/services/language_service.dart';
 import 'package:read_more_fun/features/home/presentation/pages/home_page.dart';
 
+import 'package:read_more_fun/core/services/spacing_service.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ThemeService.instance.init();
   await LanguageService.init();
+  await SpacingService.init();
   runApp(const MyApp());
 }
 
