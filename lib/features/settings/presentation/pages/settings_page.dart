@@ -5,32 +5,39 @@ import 'package:read_more_fun/core/services/language_service.dart';
 import 'package:read_more_fun/core/services/theme_service.dart';
 import 'package:read_more_fun/core/services/spacing_service.dart';
 import 'package:read_more_fun/core/utils/whatsapp_formatter.dart';
-import 'package:read_more_fun/features/settings/presentation/pages/about_me_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          context.translate('settings_title'),
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-        children: [
-          _buildLanguageTile(context),
-          const Divider(height: 24),
-          _buildSpacingTile(context),
-          const Divider(height: 24),
-          _buildThemeTile(context),
-          const Divider(height: 24),
-          _buildAboutMeTile(context),
-        ],
-      ),
+    return ValueListenableBuilder<String>(
+      valueListenable: LanguageService.activeLanguageNotifier,
+      builder: (context, activeLang, child) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(
+              context.translate('settings_title'),
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          body: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            children: [
+              _buildLanguageTile(context),
+              const SizedBox(height: 8),
+              _buildSpacingTile(context),
+              const SizedBox(height: 8),
+              _buildThemeTile(context),
+              const SizedBox(height: 8),
+              _buildShareAppTile(context),
+              const SizedBox(height: 8),
+              _buildRateAppTile(context),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -137,31 +144,64 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAboutMeTile(BuildContext context) {
+  Widget _buildShareAppTile(BuildContext context) {
     return Card(
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          child: Icon(Icons.person_outline,
+          child: Icon(Icons.share_outlined,
               color: Theme.of(context).colorScheme.primary),
         ),
         title: Text(
-          context.translate('option_about_me'),
+          context.translate('option_share_app'),
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
-          'Pratik Butani',
+          context.translate('option_share_app_subtitle'),
           style: TextStyle(
             color: context.textColor.withValues(alpha: 0.6),
             fontSize: 13,
           ),
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AboutMePage()),
-          );
+        onTap: () async {
+          await WhatsAppFormatter.shareApp(context,
+              spacingTimes: SpacingService.spacingNotifier.value);
+        },
+      ),
+    );
+  }
+
+  Widget _buildRateAppTile(BuildContext context) {
+    return Card(
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          child: Icon(Icons.star_outline,
+              color: Theme.of(context).colorScheme.primary),
+        ),
+        title: Text(
+          context.translate('option_rate_app'),
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text(
+          context.translate('option_rate_app_subtitle'),
+          style: TextStyle(
+            color: context.textColor.withValues(alpha: 0.6),
+            fontSize: 13,
+          ),
+        ),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: () async {
+          final url = Uri.parse(
+              'https://play.google.com/store/apps/details?id=com.swastik.readmore.fun');
+          if (await canLaunchUrl(url)) {
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+          } else {
+            if (context.mounted) {
+              context.showSnackBar('Could not launch Play Store');
+            }
+          }
         },
       ),
     );

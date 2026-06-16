@@ -33,6 +33,8 @@ class _MyHomePageState extends State<MyHomePage> {
       ValueNotifier<String>("");
   final ValueNotifier<bool> _isReadMoreClickedNotifier =
       ValueNotifier<bool>(false);
+  final ValueNotifier<bool> _isIosCompatibleNotifier =
+      ValueNotifier<bool>(false);
 
   PresetMode _selectedMode = PresetMode.freeText;
 
@@ -86,6 +88,40 @@ class _MyHomePageState extends State<MyHomePage> {
     _quizAFocusNode = FocusNode();
 
     _setupFocusListeners();
+    LanguageService.activeLanguageNotifier.addListener(_onLanguageChanged);
+  }
+
+  void _onLanguageChanged() {
+    if (!mounted) return;
+    final currentLang = LanguageService.activeLanguageNotifier.value;
+    final oldIntroHint = AppLocalizations.getValue(_lastLang, 'free_text_intro_hint');
+    final oldReadMoreHint = AppLocalizations.getValue(_lastLang, 'free_text_read_more_hint');
+
+    // Only translate if they had the old hint text as content (i.e. not empty/custom text)
+    if (_introController.text == oldIntroHint) {
+      _introController.text = AppLocalizations.getValue(currentLang, 'free_text_intro_hint');
+    }
+    if (_readMoreController.text == oldReadMoreHint) {
+      _readMoreController.text = AppLocalizations.getValue(currentLang, 'free_text_read_more_hint');
+    }
+
+    // Always translate notifiers if the controllers are empty, so the preview hints match
+    if (_introController.text.isEmpty) {
+      _introTextNotifier.value = AppLocalizations.getValue(currentLang, 'free_text_intro_hint');
+    } else {
+      _introTextNotifier.value = _introController.text;
+    }
+
+    if (_readMoreController.text.isEmpty) {
+      _readMoreTextNotifier.value = AppLocalizations.getValue(currentLang, 'free_text_read_more_hint');
+    } else {
+      _readMoreTextNotifier.value = _readMoreController.text;
+    }
+
+    _lastLang = currentLang;
+    setState(() {
+      _syncPresetToNotifier();
+    });
   }
 
   @override
@@ -93,26 +129,12 @@ class _MyHomePageState extends State<MyHomePage> {
     super.didChangeDependencies();
     final currentLang = LanguageService.activeLanguageNotifier.value;
     if (!_isInitialized) {
-      _introController.text = context.translate('free_text_intro_hint');
-      _readMoreController.text = context.translate('free_text_read_more_hint');
+      _introController.text = "";
+      _readMoreController.text = "";
       _introTextNotifier.value = context.translate('free_text_intro_hint');
       _readMoreTextNotifier.value = context.translate('free_text_read_more_hint');
       _lastLang = currentLang;
       _isInitialized = true;
-    } else if (_lastLang != currentLang) {
-      final oldIntroHint = AppLocalizations.getValue(_lastLang, 'free_text_intro_hint');
-      final oldReadMoreHint = AppLocalizations.getValue(_lastLang, 'free_text_read_more_hint');
-
-      if (_introController.text == oldIntroHint) {
-        _introController.text = context.translate('free_text_intro_hint');
-        _introTextNotifier.value = context.translate('free_text_intro_hint');
-      }
-      if (_readMoreController.text == oldReadMoreHint) {
-        _readMoreController.text = context.translate('free_text_read_more_hint');
-        _readMoreTextNotifier.value = context.translate('free_text_read_more_hint');
-      }
-      _syncPresetToNotifier();
-      _lastLang = currentLang;
     }
   }
 
@@ -139,9 +161,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void dispose() {
+    LanguageService.activeLanguageNotifier.removeListener(_onLanguageChanged);
     _introTextNotifier.dispose();
     _readMoreTextNotifier.dispose();
     _isReadMoreClickedNotifier.dispose();
+    _isIosCompatibleNotifier.dispose();
 
     _introController.dispose();
     _readMoreController.dispose();
@@ -199,6 +223,8 @@ class _MyHomePageState extends State<MyHomePage> {
       } else {
         _syncPresetToNotifier();
       }
+      // Keep the cursor and focus inside the text field
+      _lastFocusedNode?.requestFocus();
     }
   }
 
@@ -240,7 +266,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   String _finalTextForClipBoard() {
     return _introTextNotifier.value +
-        WhatsAppFormatter.getLovelyString(times: SpacingService.spacingNotifier.value) +
+        WhatsAppFormatter.getLovelyString(
+          times: SpacingService.spacingNotifier.value,
+          isIos: _isIosCompatibleNotifier.value,
+        ) +
         _readMoreTextNotifier.value;
   }
 
@@ -304,7 +333,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                       const SizedBox(height: 8),
                       _getProperTextChild(),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 12),
+                      _buildIosCompatibilityCheckbox(),
+                      const SizedBox(height: 16),
                       _getActionButtonsGrid(theme),
                     ],
                   ),
@@ -313,14 +344,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          context.showSnackBar(context.translate('snackbar_sharing'));
-          WhatsAppFormatter.shareApp(context, spacingTimes: SpacingService.spacingNotifier.value);
-        },
-        tooltip: context.translate('share_app'),
-        child: const Icon(Icons.share_outlined),
       ),
     );
   }
@@ -414,6 +437,13 @@ class _MyHomePageState extends State<MyHomePage> {
               decoration: TextDecoration.lineThrough, fontSize: 16),
           onPressed: () => _applyFormat("~"),
         ),
+        const SizedBox(width: 16),
+        _buildToolbarButton(
+          label: "•",
+          tooltip: context.translate("bullet_tooltip"),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          onPressed: () => _applyFormat("- "),
+        ),
       ],
     );
   }
@@ -455,7 +485,9 @@ class _MyHomePageState extends State<MyHomePage> {
               controller: _introController,
               focusNode: _introFocusNode,
               hintText: context.translate("free_text_intro_hint"),
-              maxLines: 1,
+              maxLines: null,
+              minLines: 1,
+              keyboardType: TextInputType.multiline,
               onChanged: (val) {
                 _introTextNotifier.value =
                     val.isEmpty ? context.translate("free_text_intro_hint") : val;
@@ -572,7 +604,9 @@ class _MyHomePageState extends State<MyHomePage> {
     required TextEditingController controller,
     required FocusNode focusNode,
     required String hintText,
-    required int maxLines,
+    int? maxLines,
+    int? minLines,
+    TextInputType? keyboardType,
     required ValueChanged<String> onChanged,
   }) {
     return TextFormField(
@@ -583,6 +617,8 @@ class _MyHomePageState extends State<MyHomePage> {
       style: GoogleFonts.lora(fontSize: 14, color: context.textColor),
       cursorWidth: 1.5,
       maxLines: maxLines,
+      minLines: minLines,
+      keyboardType: keyboardType,
       onChanged: onChanged,
       decoration: InputDecoration(
         hintText: hintText,
@@ -637,6 +673,7 @@ class _MyHomePageState extends State<MyHomePage> {
           _introTextNotifier,
           _readMoreTextNotifier,
           SpacingService.spacingNotifier,
+          _isIosCompatibleNotifier,
         ]),
         builder: (ctx, child) {
           bool isReadMoreClicked = _isReadMoreClickedNotifier.value;
@@ -652,7 +689,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         introText, defaultStyle),
                     TextSpan(
                         text: WhatsAppFormatter.getLovelyString(
-                            times: SpacingService.spacingNotifier.value),
+                            times: SpacingService.spacingNotifier.value,
+                            isIos: _isIosCompatibleNotifier.value),
                         style: defaultStyle),
                     ...WhatsAppFormatter.parseWhatsAppText(
                         '\n\n\n$readMoreText', defaultStyle),
@@ -663,7 +701,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         introText, defaultStyle),
                     TextSpan(
                         text: WhatsAppFormatter.getLovelyString(
-                            times: SpacingService.spacingNotifier.value),
+                            times: SpacingService.spacingNotifier.value,
+                            isIos: _isIosCompatibleNotifier.value),
                         style: defaultStyle),
                     TextSpan(text: ' ... ', style: defaultStyle),
                     TextSpan(
@@ -776,6 +815,38 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildIosCompatibilityCheckbox() {
+    return ValueListenableBuilder<bool>(
+      valueListenable: _isIosCompatibleNotifier,
+      builder: (context, isIos, child) {
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Checkbox(
+              value: isIos,
+              onChanged: (val) {
+                _isIosCompatibleNotifier.value = val ?? false;
+              },
+            ),
+            GestureDetector(
+              onTap: () {
+                _isIosCompatibleNotifier.value = !isIos;
+              },
+              child: Text(
+                'iOS Compatible',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: context.textColor.withValues(alpha: 0.8),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

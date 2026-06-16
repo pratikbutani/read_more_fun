@@ -28,34 +28,45 @@ extension SnackBarContext on BuildContext {
 }
 
 class WhatsAppFormatter {
-  static const String zeroWidthSpace = '\u200B';
-  static const int defaultSpacingTimes = 1300;
+  static const String zeroWidthSpace = '\u3164';
+  static const int defaultSpacingTimes = 1500;
 
-  static String getLovelyString({int times = defaultSpacingTimes}) {
-    return "${zeroWidthSpace * times}\n\n";
+  static String getLovelyString({int times = defaultSpacingTimes, bool isIos = false}) {
+    final spacer = isIos ? '\u3164' : '\u200B';
+    return "${spacer * times}\n\n";
   }
 
-  static Future<void> shareTemplate(BuildContext context, String intro, String readMore, {int spacingTimes = defaultSpacingTimes}) async {
-    String str = getLovelyString(times: spacingTimes);
+  static Future<void> shareTemplate(BuildContext context, String intro, String readMore, {int spacingTimes = defaultSpacingTimes, bool isIos = false}) async {
+    String str = getLovelyString(times: spacingTimes, isIos: isIos);
     final text = context.translate('share_template_text', [intro, str, readMore]);
     await Share.share(text);
   }
 
-  static Future<void> shareApp(BuildContext context, {int spacingTimes = defaultSpacingTimes}) async {
-    String str = getLovelyString(times: spacingTimes);
+  static Future<void> shareApp(BuildContext context, {int spacingTimes = defaultSpacingTimes, bool isIos = false}) async {
+    String str = getLovelyString(times: spacingTimes, isIos: isIos);
     final text = context.translate('share_app_text', [str]);
     await Share.share(text);
   }
 
   static List<TextSpan> parseWhatsAppText(String text, TextStyle baseStyle) {
+    // Process list markers first: lines starting with "- " or "* " (followed by space) -> replace with bullet symbol "• "
+    final processedLines = text.split('\n').map((line) {
+      if (line.startsWith('- ')) {
+        return '• ${line.substring(2)}';
+      } else if (line.startsWith('* ')) {
+        return '• ${line.substring(2)}';
+      }
+      return line;
+    }).join('\n');
+
     final RegExp regExp = RegExp(r'([*_~])(.*?)\1');
     List<TextSpan> spans = [];
     int lastIndex = 0;
 
-    for (final Match match in regExp.allMatches(text)) {
+    for (final Match match in regExp.allMatches(processedLines)) {
       if (match.start > lastIndex) {
         spans.add(TextSpan(
-          text: text.substring(lastIndex, match.start),
+          text: processedLines.substring(lastIndex, match.start),
           style: baseStyle,
         ));
       }
@@ -76,8 +87,8 @@ class WhatsAppFormatter {
       lastIndex = match.end;
     }
 
-    if (lastIndex < text.length) {
-      spans.add(TextSpan(text: text.substring(lastIndex), style: baseStyle));
+    if (lastIndex < processedLines.length) {
+      spans.add(TextSpan(text: processedLines.substring(lastIndex), style: baseStyle));
     }
 
     return spans;
@@ -88,16 +99,49 @@ class WhatsAppFormatter {
     final text = controller.text;
 
     if (!selection.isValid) {
-      final newText = text + marker + marker;
-      controller.value = TextEditingValue(
-        text: newText,
-        selection: TextSelection.collapsed(offset: newText.length - marker.length),
-      );
+      if (marker == '- ') {
+        final newText = text + marker;
+        controller.value = TextEditingValue(
+          text: newText,
+          selection: TextSelection.collapsed(offset: newText.length),
+        );
+      } else {
+        final newText = text + marker + marker;
+        controller.value = TextEditingValue(
+          text: newText,
+          selection: TextSelection.collapsed(offset: newText.length - marker.length),
+        );
+      }
       return;
     }
 
     final start = selection.start;
     final end = selection.end;
+
+    if (marker == '- ') {
+      if (start == end) {
+        final newText = text.substring(0, start) + marker + text.substring(start);
+        controller.value = TextEditingValue(
+          text: newText,
+          selection: TextSelection.collapsed(offset: start + marker.length),
+        );
+      } else {
+        final selectedText = text.substring(start, end);
+        final formattedLines = selectedText.split('\n').map((line) {
+          if (line.startsWith('- ')) return line;
+          return '- $line';
+        }).join('\n');
+        final newText = text.substring(0, start) + formattedLines + text.substring(end);
+        controller.value = TextEditingValue(
+          text: newText,
+          selection: TextSelection(
+            baseOffset: start,
+            extentOffset: start + formattedLines.length,
+          ),
+        );
+      }
+      return;
+    }
 
     if (start == end) {
       final newText = text.substring(0, start) + marker + marker + text.substring(start);

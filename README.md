@@ -13,9 +13,11 @@
 ## ✨ Features
 
 - 🎨 **Modern Neumorphic UI:** A clean, soft-UI design that looks great in both light and dark modes.
-- 📝 **WhatsApp Formatting Support:** Easily apply **bold**, _italic_, and ~~strikethrough~~ styles using standard WhatsApp syntax.
-- 👁️ **Live Message Preview:** See exactly how your message will appear in a WhatsApp-style chat bubble before sending.
-- 📂 **Templates:** Access pre-defined templates for quick message creation.
+- 📝 **WhatsApp Formatting Support:** Easily apply **Bold**, _Italic_, ~Strikethrough~, and • Bullet List formatting using the intuitive toolbar buttons.
+- 📲 **iOS & Android Compatibility Check:** Features a dedicated "iOS Compatible" toggle switch to customize spacer strings for optimal cross-platform rendering.
+- 👁️ **Live Message Preview:** See exactly how your formatted message will appear in a WhatsApp-style chat bubble in real-time.
+- 🌐 **Localized Language Support:** Built-in support for 11 major languages (English, Hindi, Gujarati, Spanish, Portuguese, Chinese, French, Arabic, Bengali, Russian, Urdu) with real-time translation across screens.
+- 📂 **Templates:** Access pre-defined templates across categories for quick message creation.
 - 🕒 **History & Drafts:** Never lose your creations; access your previous messages anytime.
 - 🌓 **Dark Mode Support:** Fully optimized for low-light environments.
 - 📲 **One-Tap Share:** Instantly share your messages to WhatsApp or copy them to your clipboard.
